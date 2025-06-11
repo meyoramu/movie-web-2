@@ -71,22 +71,22 @@ RewriteRule ^(.*)$ index.php [QSA,L]
 </IfModule>
 
 # Block access to version control
-<DirectoryMatch "\.git">
-    Order allow,deny
-    Deny from all
-</DirectoryMatch>
+<IfModule mod_rewrite.c>
+    RewriteRule ^\.git - [F,L]
+    RewriteRule ^(.*/)?\.git(/.*)?$ - [F,L]
+</IfModule>
 
 # Block access to vendor directory
-<DirectoryMatch "vendor">
-    Order allow,deny
-    Deny from all
-</DirectoryMatch>
+<IfModule mod_rewrite.c>
+    RewriteRule ^vendor - [F,L]
+    RewriteRule ^(.*/)?vendor(/.*)?$ - [F,L]
+</IfModule>
 
 # Block access to node_modules
-<DirectoryMatch "node_modules">
-    Order allow,deny
-    Deny from all
-</DirectoryMatch>
+<IfModule mod_rewrite.c>
+    RewriteRule ^node_modules - [F,L]
+    RewriteRule ^(.*/)?node_modules(/.*)?$ - [F,L]
+</IfModule>
 
 # Performance Optimizations
 <IfModule mod_expires.c>
@@ -162,12 +162,9 @@ RewriteRule ^(.*)$ index.php [QSA,L]
 FileETag None
 
 # Prevent access to PHP files in uploads directory
-<Directory "uploads">
-    <Files "*.php">
-        Order allow,deny
-        Deny from all
-    </Files>
-</Directory>
+<IfModule mod_rewrite.c>
+    RewriteRule ^uploads/.*\.php$ - [F,L]
+</IfModule>
 
 # Custom Error Pages
 ErrorDocument 404 /404.html
