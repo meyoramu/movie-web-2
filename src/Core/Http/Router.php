@@ -272,53 +272,25 @@ class Router
 
         // Replace parameter placeholders with regex groups
         if (empty($constraints)) {
-            $pattern = preg_replace('/\\\{(\w+)\\\}/', '([^/]+)', $pattern);
+            // Use a simpler pattern that doesn't cause regex issues
+            $pattern = preg_replace('/\\\{(\w+)\\\}/', '([^\/]+)', $pattern);
         } else {
             // Replace parameters with their constraints
             $pattern = preg_replace_callback('/\\\{(\w+)\\\}/', function($matches) use ($constraints) {
                 $paramName = $matches[1];
                 if (isset($constraints[$paramName])) {
                     $constraintPattern = $constraints[$paramName];
-
-                    // Validate the constraint pattern
-                    if (!$this->isValidRegexPattern($constraintPattern)) {
-                        throw new Exception("Invalid regex pattern for parameter '{$paramName}': {$constraintPattern}");
-                    }
-
                     return '(' . $constraintPattern . ')';
                 }
-                return '([^/]+)';
+                // Use escaped forward slash in character class
+                return '([^\/]+)';
             }, $pattern);
         }
 
-        $finalPattern = '/^' . $pattern . '$/';
-
-        // Validate the final pattern
-        if (!$this->isValidRegexPattern($finalPattern, true)) {
-            throw new Exception("Invalid compiled regex pattern: {$finalPattern}");
-        }
-
-        return $finalPattern;
+        return '/^' . $pattern . '$/';
     }
 
-    /**
-     * Validate if a regex pattern is valid
-     */
-    private function isValidRegexPattern(string $pattern, bool $isFullPattern = false): bool
-    {
-        // If it's not a full pattern, wrap it for testing
-        $testPattern = $isFullPattern ? $pattern : '/^' . $pattern . '$/';
 
-        // Clear any previous errors
-        error_clear_last();
-
-        // Suppress warnings and test the pattern
-        $result = @preg_match($testPattern, '');
-
-        // Check if preg_match failed (returns false on error) or if there was a PHP error
-        $lastError = error_get_last();
-        return $result !== false && ($lastError === null || !str_contains($lastError['message'], 'preg_match'));
-    }
 
     /**
      * Execute middleware chain
