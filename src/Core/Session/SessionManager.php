@@ -25,15 +25,20 @@ class SessionManager
      */
     private function configureSession(): void
     {
+        // Only configure if session hasn't started and we're not in CLI mode
+        if (session_status() === PHP_SESSION_ACTIVE || php_sapi_name() === 'cli') {
+            return;
+        }
+
         // Set session configuration
-        ini_set('session.cookie_lifetime', $this->config['lifetime'] * 60);
-        ini_set('session.cookie_path', $this->config['path'] ?? '/');
-        ini_set('session.cookie_httponly', $this->config['http_only'] ?? true);
-        ini_set('session.cookie_secure', $this->config['secure'] ?? false);
-        ini_set('session.cookie_samesite', $this->config['same_site'] ?? 'Lax');
-        
+        @ini_set('session.cookie_lifetime', $this->config['lifetime'] * 60);
+        @ini_set('session.cookie_path', $this->config['path'] ?? '/');
+        @ini_set('session.cookie_httponly', $this->config['http_only'] ?? true);
+        @ini_set('session.cookie_secure', $this->config['secure'] ?? false);
+        @ini_set('session.cookie_samesite', $this->config['same_site'] ?? 'Lax');
+
         if (isset($this->config['domain'])) {
-            ini_set('session.cookie_domain', $this->config['domain']);
+            @ini_set('session.cookie_domain', $this->config['domain']);
         }
 
         // Set session save path for file driver
@@ -42,7 +47,7 @@ class SessionManager
             if (!is_dir($sessionPath)) {
                 mkdir($sessionPath, 0755, true);
             }
-            session_save_path($sessionPath);
+            @session_save_path($sessionPath);
         }
     }
 
@@ -51,6 +56,12 @@ class SessionManager
      */
     public function start(): bool
     {
+        // Don't start sessions in CLI mode
+        if (php_sapi_name() === 'cli') {
+            $this->started = true;
+            return true;
+        }
+
         if ($this->started) {
             return true;
         }
@@ -61,18 +72,19 @@ class SessionManager
         }
 
         try {
-            $result = session_start();
+            $result = @session_start();
             $this->started = $result;
-            
-            // Regenerate session ID periodically for security
-            if (!$this->has('_session_started')) {
+
+            // Regenerate session ID periodically for security (only if session actually started)
+            if ($result && !isset($_SESSION['_session_started'])) {
                 $this->regenerateId();
-                $this->set('_session_started', time());
+                $_SESSION['_session_started'] = time();
             }
-            
+
             return $result;
         } catch (Exception $e) {
             error_log("Session start failed: " . $e->getMessage());
+            $this->started = false;
             return false;
         }
     }
@@ -82,6 +94,9 @@ class SessionManager
      */
     public function get(string $key, $default = null)
     {
+        if (php_sapi_name() === 'cli') {
+            return $default;
+        }
         $this->ensureStarted();
         return $_SESSION[$key] ?? $default;
     }
@@ -91,6 +106,9 @@ class SessionManager
      */
     public function set(string $key, $value): void
     {
+        if (php_sapi_name() === 'cli') {
+            return;
+        }
         $this->ensureStarted();
         $_SESSION[$key] = $value;
     }
@@ -100,6 +118,9 @@ class SessionManager
      */
     public function has(string $key): bool
     {
+        if (php_sapi_name() === 'cli') {
+            return false;
+        }
         $this->ensureStarted();
         return isset($_SESSION[$key]);
     }
@@ -264,7 +285,12 @@ class SessionManager
      */
     private function ensureStarted(): void
     {
-        if (!$this->started) {
+        // In CLI mode, just return without starting session
+        if (php_sapi_name() === 'cli') {
+            return;
+        }
+
+        if (!$this->started && session_status() !== PHP_SESSION_ACTIVE) {
             $this->start();
         }
     }
