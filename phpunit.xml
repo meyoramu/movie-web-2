@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.3/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         processIsolation="false"
+         stopOnFailure="false"
+         cacheDirectory=".phpunit.cache"
+         backupGlobals="false"
+         backupStaticProperties="false">
+    
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+        <testsuite name="Integration">
+            <directory>tests/Integration</directory>
+        </testsuite>
+    </testsuites>
+    
+    <source>
+        <include>
+            <directory>src</directory>
+        </include>
+        <exclude>
+            <directory>src/Views</directory>
+            <file>src/Core/Application.php</file>
+        </exclude>
+    </source>
+    
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="APP_DEBUG" value="true"/>
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
+        <env name="CACHE_DRIVER" value="array"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="MAIL_MAILER" value="array"/>
+    </php>
+    
+    <logging>
+        <junit outputFile="tests/results/junit.xml"/>
+        <teamcity outputFile="tests/results/teamcity.txt"/>
+        <testdoxHtml outputFile="tests/results/testdox.html"/>
+        <testdoxText outputFile="tests/results/testdox.txt"/>
+        <text outputFile="tests/results/logfile.txt"/>
+    </logging>
+    
+    <coverage>
+        <report>
+            <html outputDirectory="tests/coverage/html"/>
+            <clover outputFile="tests/coverage/clover.xml"/>
+            <cobertura outputFile="tests/coverage/cobertura.xml"/>
+            <crap4j outputFile="tests/coverage/crap4j.xml"/>
+            <php outputFile="tests/coverage/coverage.php"/>
+            <text outputFile="tests/coverage/coverage.txt"/>
+            <xml outputDirectory="tests/coverage/xml"/>
+        </report>
+    </coverage>
+</phpunit>
