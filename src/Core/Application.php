@@ -23,13 +23,13 @@ class Application
 {
     private static ?Application $instance = null;
     private array $config = [];
-    private DatabaseManager $database;
-    private Router $router;
-    private SessionManager $session;
-    private AuthManager $auth;
-    private CacheManager $cache;
-    private Logger $logger;
-    private Translator $translator;
+    private ?DatabaseManager $database = null;
+    private ?Router $router = null;
+    private ?SessionManager $session = null;
+    private ?AuthManager $auth = null;
+    private ?CacheManager $cache = null;
+    private ?Logger $logger = null;
+    private ?Translator $translator = null;
     private array $services = [];
 
     private function __construct()
@@ -79,29 +79,46 @@ class Application
      */
     private function initializeServices(): void
     {
-        // Initialize logger first for error handling
-        $this->logger = new Logger($this->config['app']['logging']);
-        
-        // Initialize database
-        $this->database = new DatabaseManager($this->config['database']);
-        
-        // Initialize cache
-        $this->cache = new CacheManager($this->config['app']['cache']);
-        
-        // Initialize session
-        $this->session = new SessionManager($this->config['app']['session']);
-        
-        // Initialize authentication
-        $this->auth = new AuthManager($this->database, $this->session, $this->config['app']['jwt']);
-        
-        // Initialize translator
-        $this->translator = new Translator($this->config['app']['localization']);
-        
-        // Initialize router
-        $this->router = new Router();
-        
-        // Register error handlers
-        $this->registerErrorHandlers();
+        try {
+            // Initialize logger first for error handling
+            $this->logger = new Logger($this->config['app']['logging']);
+
+            // Initialize cache
+            $this->cache = new CacheManager($this->config['app']['cache']);
+
+            // Initialize session
+            $this->session = new SessionManager($this->config['app']['session']);
+
+            // Initialize translator
+            $this->translator = new Translator($this->config['app']['localization']);
+
+            // Initialize database (with error handling)
+            try {
+                $this->database = new DatabaseManager($this->config['database']);
+            } catch (Exception $e) {
+                $this->logger->error('Database connection failed: ' . $e->getMessage());
+                // Continue without database for now
+                $this->database = null;
+            }
+
+            // Initialize authentication (only if database is available)
+            if ($this->database) {
+                $this->auth = new AuthManager($this->database, $this->session, $this->config['app']['jwt']);
+            } else {
+                $this->auth = null;
+            }
+
+            // Initialize router
+            $this->router = new Router();
+
+            // Register error handlers
+            $this->registerErrorHandlers();
+
+        } catch (Exception $e) {
+            // Log initialization error
+            error_log('Application initialization failed: ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     /**
