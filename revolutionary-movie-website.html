@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎬 CineVerse - The Future of Movie Discovery</title>
+    
+    <!-- Meta Tags for PWA -->
+    <meta name="description" content="Revolutionary movie discovery platform with AI-powered recommendations">
+    <meta name="theme-color" content="#1a1a2e">
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQ2luZVZlcnNlIiwic2hvcnRfbmFtZSI6IkNpbmVWZXJzZSIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMWExYTJlIiwidGhlbWVfY29sb3IiOiIjMWExYTJlIn0=">
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        :root {
+            --primary: #6366f1;
+            --secondary: #8b5cf6;
+            --accent: #f59e0b;
+            --dark: #0f0f23;
+            --darker: #1a1a2e;
+            --light: #16213e;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--dark) 0%, var(--darker) 50%, var(--light) 100%);
+            color: var(--text);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        
+        /* Animated Background */
+        .bg-animated {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 80%, rgba(245, 158, 11, 0.1) 0%, transparent 50%);
+            animation: backgroundShift 20s ease-in-out infinite;
+        }
+        
+        @keyframes backgroundShift {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+        
+        /* Glassmorphism Effects */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+        }
+        
+        /* 3D Movie Cards */
+        .movie-card {
+            perspective: 1000px;
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1);
+        }
+        
+        .movie-card:hover {
+            transform: translateY(-20px) scale(1.05);
+        }
+        
+        .movie-card-inner {
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+        
+        .movie-card:hover .movie-card-inner {
+            transform: rotateY(15deg) rotateX(5deg);
+        }
+        
+        /* Neural Search */
+        .search-container {
+            position: relative;
+        }
+        
+        .search-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 50px;
+            padding: 20px 60px 20px 25px;
+            font-size: 18px;
+            color: var(--text);
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+        }
+        
+        /* Holographic Effects */
+        .holographic {
+            background: linear-gradient(45deg, 
+                rgba(99, 102, 241, 0.8) 0%, 
+                rgba(139, 92, 246, 0.8) 25%, 
+                rgba(245, 158, 11, 0.8) 50%, 
+                rgba(139, 92, 246, 0.8) 75%, 
+                rgba(99, 102, 241, 0.8) 100%);
+            background-size: 400% 400%;
+            animation: holographicShift 3s ease-in-out infinite;
+        }
+        
+        @keyframes holographicShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        /* Quantum Loading */
+        .quantum-loader {
+            width: 60px;
+            height: 60px;
+            border: 3px solid transparent;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: quantumSpin 1s linear infinite;
+            position: relative;
+        }
+        
+        .quantum-loader::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            border: 3px solid transparent;
+            border-bottom: 3px solid var(--secondary);
+            border-radius: 50%;
+            animation: quantumSpin 1.5s linear infinite reverse;
+        }
+        
+        @keyframes quantumSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .movie-card {
+                margin-bottom: 20px;
+            }
+        }
+        
+        /* Easter Egg - Hidden AI Assistant */
+        .ai-assistant {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .ai-assistant:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(99, 102, 241, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-animated"></div>
+    
+    <!-- Header -->
+    <header class="relative z-10 p-6">
+        <nav class="glass max-w-7xl mx-auto p-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="holographic w-12 h-12 rounded-full flex items-center justify-center">
+                    <i class="fas fa-film text-white text-xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                    CineVerse
+                </h1>
+            </div>
+            
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="#" class="text-gray-300 hover:text-white transition-colors">Discover</a>
+                <a href="#" class="text-gray-300 hover:text-white transition-colors">Trending</a>
+                <a href="#" class="text-gray-300 hover:text-white transition-colors">Watchlist</a>
+                <button class="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-2 rounded-full hover:shadow-lg transition-all">
+                    Sign In
+                </button>
+            </div>
+        </nav>
+    </header>
+    
+    <!-- Hero Section -->
+    <section class="relative z-10 max-w-7xl mx-auto px-6 py-12">
+        <div class="text-center mb-12">
+            <h2 class="text-6xl md:text-8xl font-black mb-6 bg-gradient-to-r from-blue-400 via-purple-500 to-yellow-400 bg-clip-text text-transparent">
+                The Future of Cinema
+            </h2>
+            <p class="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+                Experience movies like never before with AI-powered recommendations and immersive discovery
+            </p>
+            
+            <!-- Neural Search -->
+            <div class="search-container max-w-2xl mx-auto mb-12">
+                <input 
+                    type="text" 
+                    id="movieSearch" 
+                    class="search-input" 
+                    placeholder="Search for any movie, actor, or genre..."
+                    autocomplete="off"
+                >
+                <button class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-blue-500 to-purple-600 p-3 rounded-full hover:shadow-lg transition-all">
+                    <i class="fas fa-search text-white"></i>
+                </button>
+                <div id="searchSuggestions" class="absolute top-full left-0 right-0 mt-2 glass rounded-2xl p-4 hidden"></div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Movies Grid -->
+    <section class="relative z-10 max-w-7xl mx-auto px-6 pb-12">
+        <div class="flex items-center justify-between mb-8">
+            <h3 class="text-3xl font-bold">Trending Now</h3>
+            <div class="flex space-x-4">
+                <button class="genre-filter active bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-2 rounded-full" data-genre="all">
+                    All
+                </button>
+                <button class="genre-filter bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-full transition-colors" data-genre="action">
+                    Action
+                </button>
+                <button class="genre-filter bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-full transition-colors" data-genre="comedy">
+                    Comedy
+                </button>
+                <button class="genre-filter bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-full transition-colors" data-genre="drama">
+                    Drama
+                </button>
+            </div>
+        </div>
+        
+        <!-- Loading State -->
+        <div id="loadingState" class="flex justify-center items-center py-20">
+            <div class="quantum-loader"></div>
+        </div>
+        
+        <!-- Movies Container -->
+        <div id="moviesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 hidden">
+            <!-- Movies will be dynamically loaded here -->
+        </div>
+    </section>
+    
+    <!-- AI Assistant (Easter Egg) -->
+    <div class="ai-assistant" id="aiAssistant">
+        <i class="fas fa-robot text-white text-xl"></i>
+    </div>
+    
+    <script>
+        // Global Variables
+        const API_KEY = '8265bd1679663a7ea12ac168da84d2e8'; // TMDB API Key
+        const BASE_URL = 'https://api.themoviedb.org/3';
+        const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
+        
+        let currentMovies = [];
+        let searchTimeout;
+        
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+            setupEventListeners();
+            loadTrendingMovies();
+        });
+        
+        function initializeApp() {
+            // GSAP Animations
+            gsap.from("header", {duration: 1, y: -100, opacity: 0, ease: "power3.out"});
+            gsap.from(".text-6xl", {duration: 1.5, y: 50, opacity: 0, delay: 0.3, ease: "power3.out"});
+            gsap.from(".search-container", {duration: 1, scale: 0.8, opacity: 0, delay: 0.6, ease: "back.out(1.7)"});
+            
+            // Show welcome message
+            setTimeout(() => {
+                showToast('Welcome to the Future of Cinema! 🎬', 'success');
+            }, 2000);
+        }
+        
+        function setupEventListeners() {
+            // Search functionality
+            const searchInput = document.getElementById('movieSearch');
+            searchInput.addEventListener('input', handleSearch);
+            
+            // Genre filters
+            document.querySelectorAll('.genre-filter').forEach(button => {
+                button.addEventListener('click', handleGenreFilter);
+            });
+            
+            // AI Assistant Easter Egg
+            document.getElementById('aiAssistant').addEventListener('click', activateAI);
+        }
+
+        async function loadTrendingMovies() {
+            try {
+                const response = await fetch(`${BASE_URL}/trending/movie/week?api_key=${API_KEY}`);
+                const data = await response.json();
+                currentMovies = data.results;
+                displayMovies(currentMovies);
+            } catch (error) {
+                console.error('Error loading movies:', error);
+                showToast('Failed to load movies. Please try again.', 'error');
+            }
+        }
+
+        function displayMovies(movies) {
+            const container = document.getElementById('moviesContainer');
+            const loadingState = document.getElementById('loadingState');
+
+            // Hide loading, show container
+            loadingState.classList.add('hidden');
+            container.classList.remove('hidden');
+
+            container.innerHTML = movies.map(movie => `
+                <div class="movie-card cursor-pointer" onclick="showMovieDetails(${movie.id})">
+                    <div class="movie-card-inner glass p-6 h-full">
+                        <div class="relative mb-4 overflow-hidden rounded-xl">
+                            <img
+                                src="${IMAGE_BASE_URL}${movie.poster_path}"
+                                alt="${movie.title}"
+                                class="w-full h-80 object-cover transition-transform duration-500 hover:scale-110"
+                                onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjYwMCIgdmlld0JveD0iMCAwIDQwMCA2MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iNjAwIiBmaWxsPSIjMzc0MTUxIi8+CjxwYXRoIGQ9Ik0yMDAgMjUwTDE1MCAzMDBIMjUwTDIwMCAyNTBaIiBmaWxsPSIjNkI3Mjg0Ii8+CjwvZGc+'"
+                            >
+                            <div class="absolute top-2 right-2 bg-yellow-500 text-black px-2 py-1 rounded-full text-sm font-bold">
+                                ⭐ ${movie.vote_average.toFixed(1)}
+                            </div>
+                        </div>
+                        <h4 class="text-lg font-semibold mb-2 line-clamp-2">${movie.title}</h4>
+                        <p class="text-gray-400 text-sm mb-3">${new Date(movie.release_date).getFullYear()}</p>
+                        <p class="text-gray-300 text-sm line-clamp-3">${movie.overview}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            // Animate movie cards
+            gsap.from(".movie-card", {
+                duration: 0.8,
+                y: 50,
+                opacity: 0,
+                stagger: 0.1,
+                ease: "power3.out"
+            });
+        }
+
+        // Neural Search with AI-like predictions
+        async function handleSearch(event) {
+            const query = event.target.value.trim();
+
+            if (searchTimeout) clearTimeout(searchTimeout);
+
+            if (query.length < 2) {
+                hideSuggestions();
+                return;
+            }
+
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    showSuggestions(data.results.slice(0, 5));
+
+                    if (query.length > 3) {
+                        displayMovies(data.results);
+                    }
+                } catch (error) {
+                    console.error('Search error:', error);
+                }
+            }, 300);
+        }
+
+        function showSuggestions(suggestions) {
+            const container = document.getElementById('searchSuggestions');
+
+            if (suggestions.length === 0) {
+                hideSuggestions();
+                return;
+            }
+
+            container.innerHTML = suggestions.map(movie => `
+                <div class="suggestion-item p-3 hover:bg-white hover:bg-opacity-10 rounded-lg cursor-pointer transition-all"
+                     onclick="selectMovie('${movie.title}', ${movie.id})">
+                    <div class="flex items-center space-x-3">
+                        <img src="${IMAGE_BASE_URL}${movie.poster_path}" alt="${movie.title}"
+                             class="w-12 h-16 object-cover rounded"
+                             onerror="this.style.display='none'">
+                        <div>
+                            <h5 class="font-medium">${movie.title}</h5>
+                            <p class="text-sm text-gray-400">${movie.release_date ? new Date(movie.release_date).getFullYear() : 'TBA'}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            container.classList.remove('hidden');
+            gsap.from(container, {duration: 0.3, y: -10, opacity: 0, ease: "power2.out"});
+        }
+
+        function hideSuggestions() {
+            document.getElementById('searchSuggestions').classList.add('hidden');
+        }
+
+        function selectMovie(title, id) {
+            document.getElementById('movieSearch').value = title;
+            hideSuggestions();
+            showMovieDetails(id);
+        }
+
+        // Genre Filtering
+        async function handleGenreFilter(event) {
+            const genre = event.target.dataset.genre;
+
+            // Update active state
+            document.querySelectorAll('.genre-filter').forEach(btn => {
+                btn.classList.remove('active', 'bg-gradient-to-r', 'from-blue-500', 'to-purple-600');
+                btn.classList.add('bg-gray-700');
+            });
+
+            event.target.classList.add('active', 'bg-gradient-to-r', 'from-blue-500', 'to-purple-600');
+            event.target.classList.remove('bg-gray-700');
+
+            // Show loading
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('moviesContainer').classList.add('hidden');
+
+            try {
+                let url;
+                if (genre === 'all') {
+                    url = `${BASE_URL}/trending/movie/week?api_key=${API_KEY}`;
+                } else {
+                    const genreMap = {
+                        'action': 28,
+                        'comedy': 35,
+                        'drama': 18
+                    };
+                    url = `${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=${genreMap[genre]}`;
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+                currentMovies = data.results;
+                displayMovies(currentMovies);
+            } catch (error) {
+                console.error('Genre filter error:', error);
+                showToast('Failed to filter movies. Please try again.', 'error');
+            }
+        }
+
+        // Revolutionary Movie Details Modal
+        async function showMovieDetails(movieId) {
+            try {
+                const response = await fetch(`${BASE_URL}/movie/${movieId}?api_key=${API_KEY}&append_to_response=videos,credits`);
+                const movie = await response.json();
+
+                const trailer = movie.videos.results.find(video => video.type === 'Trailer' && video.site === 'YouTube');
+                const director = movie.credits.crew.find(person => person.job === 'Director');
+                const cast = movie.credits.cast.slice(0, 5);
+
+                Swal.fire({
+                    html: `
+                        <div class="movie-modal">
+                            <div class="flex flex-col md:flex-row gap-6">
+                                <div class="md:w-1/3">
+                                    <img src="${IMAGE_BASE_URL}${movie.poster_path}" alt="${movie.title}"
+                                         class="w-full rounded-xl shadow-2xl">
+                                </div>
+                                <div class="md:w-2/3 text-left">
+                                    <h2 class="text-3xl font-bold mb-4 text-white">${movie.title}</h2>
+                                    <div class="flex items-center gap-4 mb-4">
+                                        <span class="bg-yellow-500 text-black px-3 py-1 rounded-full font-bold">
+                                            ⭐ ${movie.vote_average.toFixed(1)}
+                                        </span>
+                                        <span class="text-gray-300">${new Date(movie.release_date).getFullYear()}</span>
+                                        <span class="text-gray-300">${movie.runtime} min</span>
+                                    </div>
+                                    <p class="text-gray-300 mb-4">${movie.overview}</p>
+                                    <div class="mb-4">
+                                        <h4 class="text-lg font-semibold mb-2 text-white">Genres</h4>
+                                        <div class="flex flex-wrap gap-2">
+                                            ${movie.genres.map(genre => `
+                                                <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm">${genre.name}</span>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                    ${director ? `<p class="text-gray-300 mb-2"><strong>Director:</strong> ${director.name}</p>` : ''}
+                                    ${cast.length > 0 ? `
+                                        <div class="mb-4">
+                                            <h4 class="text-lg font-semibold mb-2 text-white">Cast</h4>
+                                            <p class="text-gray-300">${cast.map(actor => actor.name).join(', ')}</p>
+                                        </div>
+                                    ` : ''}
+                                    ${trailer ? `
+                                        <button onclick="window.open('https://www.youtube.com/watch?v=${trailer.key}', '_blank')"
+                                                class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-semibold transition-all">
+                                            🎬 Watch Trailer
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                    background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+                    showConfirmButton: false,
+                    showCloseButton: true,
+                    width: '90%',
+                    maxWidth: '1000px',
+                    customClass: {
+                        popup: 'rounded-3xl border border-gray-700'
+                    }
+                });
+
+                // Add to user's viewing history (AI learning)
+                addToHistory(movie);
+
+            } catch (error) {
+                console.error('Error loading movie details:', error);
+                showToast('Failed to load movie details. Please try again.', 'error');
+            }
+        }
+
+        // AI Assistant Easter Egg
+        function activateAI() {
+            const messages = [
+                "🤖 AI Assistant activated! I'm learning your movie preferences...",
+                "🎬 Based on your viewing history, I recommend exploring sci-fi thrillers!",
+                "🌟 Fun fact: The average movie buff watches 2.3 movies per week!",
+                "🎭 Would you like me to create a personalized watchlist for you?",
+                "🚀 This website uses quantum-speed algorithms for instant recommendations!"
+            ];
+
+            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+
+            Swal.fire({
+                title: 'CineVerse AI',
+                text: randomMessage,
+                icon: 'info',
+                background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+                color: '#e2e8f0',
+                confirmButtonColor: '#6366f1',
+                confirmButtonText: 'Amazing!',
+                timer: 5000,
+                timerProgressBar: true
+            });
+
+            // Animate AI button
+            gsap.to("#aiAssistant", {
+                duration: 0.5,
+                scale: 1.2,
+                rotation: 360,
+                ease: "back.out(1.7)",
+                yoyo: true,
+                repeat: 1
+            });
+        }
+
+        // User Behavior Learning (AI Simulation)
+        function addToHistory(movie) {
+            let history = JSON.parse(localStorage.getItem('movieHistory') || '[]');
+            history.unshift({
+                id: movie.id,
+                title: movie.title,
+                genres: movie.genres.map(g => g.name),
+                rating: movie.vote_average,
+                timestamp: Date.now()
+            });
+
+            // Keep only last 50 movies
+            history = history.slice(0, 50);
+            localStorage.setItem('movieHistory', JSON.stringify(history));
+        }
+
+        // Toast Notifications
+        function showToast(message, type = 'info') {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                background: type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#6366f1',
+                color: '#ffffff'
+            });
+
+            Toast.fire({
+                icon: type,
+                title: message
+            });
+        }
+
+        // Progressive Web App Features
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgZXZlbnQgPT4geyBldmVudC53YWl0VW50aWwoY2FjaGVzLm9wZW4oJ2NpbmV2ZXJzZS12MScpLnRoZW4oY2FjaGUgPT4gY2FjaGUuYWRkQWxsKFsnLyddKSkpOyB9KTs=')
+                    .then(() => console.log('PWA Service Worker registered'))
+                    .catch(() => console.log('PWA Service Worker registration failed'));
+            });
+        }
+
+        // Keyboard Shortcuts (Power User Feature)
+        document.addEventListener('keydown', (event) => {
+            if (event.ctrlKey || event.metaKey) {
+                switch(event.key) {
+                    case 'k':
+                        event.preventDefault();
+                        document.getElementById('movieSearch').focus();
+                        break;
+                    case '/':
+                        event.preventDefault();
+                        document.getElementById('movieSearch').focus();
+                        break;
+                }
+            }
+
+            if (event.key === 'Escape') {
+                hideSuggestions();
+            }
+        });
+
+        // Performance Monitoring
+        window.addEventListener('load', () => {
+            const loadTime = performance.now();
+            console.log(`🚀 CineVerse loaded in ${loadTime.toFixed(2)}ms - Quantum Speed Achieved!`);
+
+            if (loadTime < 1000) {
+                setTimeout(() => {
+                    showToast('⚡ Quantum-speed loading detected! Welcome to the future!', 'success');
+                }, 3000);
+            }
+        });
+
+        // Click outside to hide suggestions
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('.search-container')) {
+                hideSuggestions();
+            }
+        });
+    </script>
+</body>
+</html>
