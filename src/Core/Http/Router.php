@@ -7,8 +7,65 @@ use CineVerse\Core\Http\Response;
 use Exception;
 
 /**
+ * Route class for handling individual routes
+ */
+class Route
+{
+    private string $method;
+    private string $path;
+    private $handler;
+    private array $middleware;
+    private array $constraints = [];
+    private Router $router;
+
+    public function __construct(Router $router, string $method, string $path, $handler, array $middleware = [])
+    {
+        $this->router = $router;
+        $this->method = $method;
+        $this->path = $path;
+        $this->handler = $handler;
+        $this->middleware = $middleware;
+    }
+
+    /**
+     * Add parameter constraint
+     */
+    public function where(string $parameter, string $pattern): self
+    {
+        $this->constraints[$parameter] = $pattern;
+        $this->router->updateRoute($this);
+        return $this;
+    }
+
+    public function getMethod(): string
+    {
+        return $this->method;
+    }
+
+    public function getPath(): string
+    {
+        return $this->path;
+    }
+
+    public function getHandler()
+    {
+        return $this->handler;
+    }
+
+    public function getMiddleware(): array
+    {
+        return $this->middleware;
+    }
+
+    public function getConstraints(): array
+    {
+        return $this->constraints;
+    }
+}
+
+/**
  * HTTP Router
- * 
+ *
  * Handles routing of HTTP requests to appropriate controllers
  */
 class Router
@@ -22,33 +79,33 @@ class Router
     /**
      * Add GET route
      */
-    public function get(string $path, $handler, array $middleware = []): void
+    public function get(string $path, $handler, array $middleware = []): Route
     {
-        $this->addRoute('GET', $path, $handler, $middleware);
+        return $this->addRoute('GET', $path, $handler, $middleware);
     }
 
     /**
      * Add POST route
      */
-    public function post(string $path, $handler, array $middleware = []): void
+    public function post(string $path, $handler, array $middleware = []): Route
     {
-        $this->addRoute('POST', $path, $handler, $middleware);
+        return $this->addRoute('POST', $path, $handler, $middleware);
     }
 
     /**
      * Add PUT route
      */
-    public function put(string $path, $handler, array $middleware = []): void
+    public function put(string $path, $handler, array $middleware = []): Route
     {
-        $this->addRoute('PUT', $path, $handler, $middleware);
+        return $this->addRoute('PUT', $path, $handler, $middleware);
     }
 
     /**
      * Add DELETE route
      */
-    public function delete(string $path, $handler, array $middleware = []): void
+    public function delete(string $path, $handler, array $middleware = []): Route
     {
-        $this->addRoute('DELETE', $path, $handler, $middleware);
+        return $this->addRoute('DELETE', $path, $handler, $middleware);
     }
 
     /**
