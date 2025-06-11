@@ -228,20 +228,34 @@ class Router
                 continue;
             }
 
-            if (preg_match($route['pattern'], $path, $matches)) {
-                // Extract parameters
-                $params = [];
-                if (preg_match_all('/\{(\w+)\}/', $route['path'], $paramMatches)) {
-                    foreach ($paramMatches[1] as $index => $paramName) {
-                        $params[$paramName] = $matches[$index + 1] ?? null;
-                    }
+            try {
+                $matchResult = preg_match($route['pattern'], $path, $matches);
+
+                // Check for preg_match errors
+                if ($matchResult === false) {
+                    $error = error_get_last();
+                    throw new Exception("Regex error in route pattern '{$route['pattern']}': " . ($error['message'] ?? 'Unknown error'));
                 }
 
-                return [
-                    'handler' => $route['handler'],
-                    'middleware' => $route['middleware'],
-                    'params' => $params
-                ];
+                if ($matchResult === 1) {
+                    // Extract parameters
+                    $params = [];
+                    if (preg_match_all('/\{(\w+)\}/', $route['path'], $paramMatches)) {
+                        foreach ($paramMatches[1] as $index => $paramName) {
+                            $params[$paramName] = $matches[$index + 1] ?? null;
+                        }
+                    }
+
+                    return [
+                        'handler' => $route['handler'],
+                        'middleware' => $route['middleware'],
+                        'params' => $params
+                    ];
+                }
+            } catch (Exception $e) {
+                // Log the error and continue to next route
+                error_log("Router error: " . $e->getMessage());
+                continue;
             }
         }
 
@@ -264,13 +278,46 @@ class Router
             $pattern = preg_replace_callback('/\\\{(\w+)\\\}/', function($matches) use ($constraints) {
                 $paramName = $matches[1];
                 if (isset($constraints[$paramName])) {
-                    return '(' . $constraints[$paramName] . ')';
+                    $constraintPattern = $constraints[$paramName];
+
+                    // Validate the constraint pattern
+                    if (!$this->isValidRegexPattern($constraintPattern)) {
+                        throw new Exception("Invalid regex pattern for parameter '{$paramName}': {$constraintPattern}");
+                    }
+
+                    return '(' . $constraintPattern . ')';
                 }
                 return '([^/]+)';
             }, $pattern);
         }
 
-        return '/^' . $pattern . '$/';
+        $finalPattern = '/^' . $pattern . '$/';
+
+        // Validate the final pattern
+        if (!$this->isValidRegexPattern($finalPattern, true)) {
+            throw new Exception("Invalid compiled regex pattern: {$finalPattern}");
+        }
+
+        return $finalPattern;
+    }
+
+    /**
+     * Validate if a regex pattern is valid
+     */
+    private function isValidRegexPattern(string $pattern, bool $isFullPattern = false): bool
+    {
+        // If it's not a full pattern, wrap it for testing
+        $testPattern = $isFullPattern ? $pattern : '/^' . $pattern . '$/';
+
+        // Clear any previous errors
+        error_clear_last();
+
+        // Suppress warnings and test the pattern
+        $result = @preg_match($testPattern, '');
+
+        // Check if preg_match failed (returns false on error) or if there was a PHP error
+        $lastError = error_get_last();
+        return $result !== false && ($lastError === null || !str_contains($lastError['message'], 'preg_match'));
     }
 
     /**
