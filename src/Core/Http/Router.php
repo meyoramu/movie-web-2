@@ -184,18 +184,38 @@ class Router
     /**
      * Add route
      */
-    private function addRoute(string $method, string $path, $handler, array $middleware): void
+    private function addRoute(string $method, string $path, $handler, array $middleware): Route
     {
         $fullPath = $this->currentGroupPrefix . $path;
         $allMiddleware = array_merge($this->currentGroupMiddleware, $middleware);
+
+        $route = new Route($this, $method, $fullPath, $handler, $allMiddleware);
 
         $this->routes[] = [
             'method' => $method,
             'path' => $fullPath,
             'pattern' => $this->compilePattern($fullPath),
             'handler' => $handler,
-            'middleware' => $allMiddleware
+            'middleware' => $allMiddleware,
+            'constraints' => [],
+            'route_object' => $route
         ];
+
+        return $route;
+    }
+
+    /**
+     * Update route with constraints
+     */
+    public function updateRoute(Route $route): void
+    {
+        foreach ($this->routes as &$routeData) {
+            if ($routeData['route_object'] === $route) {
+                $routeData['constraints'] = $route->getConstraints();
+                $routeData['pattern'] = $this->compilePattern($route->getPath(), $route->getConstraints());
+                break;
+            }
+        }
     }
 
     /**
@@ -231,14 +251,25 @@ class Router
     /**
      * Compile route pattern to regex
      */
-    private function compilePattern(string $path): string
+    private function compilePattern(string $path, array $constraints = []): string
     {
         // Escape special regex characters except {}
         $pattern = preg_quote($path, '/');
-        
+
         // Replace parameter placeholders with regex groups
-        $pattern = preg_replace('/\\\{(\w+)\\\}/', '([^/]+)', $pattern);
-        
+        if (empty($constraints)) {
+            $pattern = preg_replace('/\\\{(\w+)\\\}/', '([^/]+)', $pattern);
+        } else {
+            // Replace parameters with their constraints
+            $pattern = preg_replace_callback('/\\\{(\w+)\\\}/', function($matches) use ($constraints) {
+                $paramName = $matches[1];
+                if (isset($constraints[$paramName])) {
+                    return '(' . $constraints[$paramName] . ')';
+                }
+                return '([^/]+)';
+            }, $pattern);
+        }
+
         return '/^' . $pattern . '$/';
     }
 
